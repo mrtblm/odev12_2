@@ -1,54 +1,33 @@
 package org.example;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-
+import java.sql.*;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.StatementException;
 
 public class Main {
     public static void main(String[] args) {
-        try {
-            Connection baglanti = DriverManager.getConnection("jdbc:mysql://sql10.freesqldatabase.com:3306/sql10690672", "sql10690672"
-                    , "m3cJaCCjtr");
 
-            String ekleSorgu = "INSERT INTO ogrenciler (ad, soyad) VALUES (?, ?)";
-            PreparedStatement ekleStatement = baglanti.prepareStatement(ekleSorgu);
-            ekleStatement.setString(1,"Lale");
-            ekleStatement.setString(2,"Fatma");
+        // MySQL bağlantı bilgileri
+        String url = "jdbc:mysql://sql10.freesqldatabase.com:3306/sql10696015";
+        String kullaniciAdi = "sql10696015";
+        String sifre = "zXJrHTNYj8";
 
+        // JDBI
+        Jdbi jdbi = Jdbi.create(url, kullaniciAdi, sifre);
+        try (Handle handle = jdbi.open()) {
+            handle.execute("INSERT INTO ogrenciler (ad,soyad) VALUES (?,?)", "Murat","BILIM");
+            handle.execute("DELETE FROM ogrenciler (ogrenciID) VALUES (?)", 1);
 
-            int etkilenenSatirSayisi = ekleStatement.executeUpdate();
-            System.out.println("Eklendi: " + etkilenenSatirSayisi + " satır");
-
-            String sorgu = "SELECT * FROM ogrenciler";
-            PreparedStatement preparedStatement = baglanti.prepareStatement(sorgu);
-
-            ResultSet sonuclar = preparedStatement.executeQuery();
-
-
-            while (sonuclar.next()) {
-                int ogrenciID = sonuclar.getInt("ogrenciID");
-                String ad = sonuclar.getString("ad");
-                String soyad = sonuclar.getString("soyad");
-
-                System.out.println("Öğrenci ID: " + ogrenciID + ", Ad: " + ad + ", Soyad: " + soyad);
-            }
-
-
-            //3 adet veri girişi sonrası 4.veriyi silmek için eklenen kod bloğu
-            String silSorgu = "DELETE FROM ogrenciler WHERE ogrenciID = ?";
-            PreparedStatement silStatement = baglanti.prepareStatement(silSorgu);
-            silStatement.setInt(1, 4);
-            int silinenSatirSayisi = silStatement.executeUpdate();
-            System.out.println("Silindi: " + silinenSatirSayisi + " satır");
-
-
-            ekleStatement.close();
-            silStatement.close();
-            baglanti.close();
-        } catch (SQLException e) {
+            String result = handle.createQuery("SELECT * FROM ogrenciler WHERE ogrenciID = :id")
+                    .bind("id", 1)
+                    .mapTo(String.class)
+                    .one();
+            System.out.println("Result: " + result);
+        } catch (StatementException e) {
             e.printStackTrace();
-        } }
+        }
+        }
+
+
+    }
 }
